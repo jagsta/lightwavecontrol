@@ -13,6 +13,8 @@ to the MQTT message queue. Since I started off with a wifi controller I use the 
 
 http://<nodejs-proxy-ip>:<listenport>/?device=R1D1&command=(on|off|dimlevel 0-31)
 
+See https://github.com/jagsta/lightwaveproxy/blob/master/lightwaveproxy-mqtt.js
+
 The arduino receives an 11 byte string:
 
 room (hex 1-f)
