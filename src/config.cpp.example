@@ -1,0 +1,22 @@
+#include "config.h"
+#include <Arduino.h>
+
+const char clientId[] = "client";
+const char username[] = "user";
+const char password[] = "pass";
+const char LWsubtopic[] = "mysubtopic";
+const char subtopic[] = "mysubtopic";
+const char LWpubtopic[] = "mypubtopic";
+const char pubtopic[] = "mypubtopic";
+const char RCSsubtopic[] = "mysubtopic";
+const char RCSpubtopic[] = "mypubtopic";
+const char LWsnooptopic[] = "mysnooptopic";
+const char snooptopic[] = "mysnooptopic";
+const char RCSsnooptopic[] = "mysnooptopic";
+const char debugtopic[] = "mydebugtopic";
+byte gateway[] = {1, 1, 1, 1};
+byte netmask[] = {255, 255, 255, 0};
+byte ip[] = {1, 1, 1, 2};
+byte server[] = {1, 1, 1, 11};
+byte id[] = {0x0, 0x0, 0x0, 0x0, 0x0};
+byte mac[] = {  0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA };
