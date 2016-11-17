@@ -1,15 +1,20 @@
 #include "config.h"
 #include <LwRx.h>
 #include <LwTx.h>
+#include <RCSwitch.h>
 #include <Ethernet.h>
 #include <SPI.h>
 #include <PubSubClient.h>
 
-#define rxPin 2
-#define txPin 3
+#define LWrxPin 2
+#define LWtxPin 3
+#define RCSrxPin 4
+#define RCStxPin 5
 #define txMultiplier 3
 #define invert 0
 #define uSecTick 140
+#define RCSuSec 326
+#define RCSProtocol 1
 
 //433 data
 byte msg[10];
@@ -67,10 +72,10 @@ void setup() {
    Serial.println("Initialising Ethernet Stack and connecting to MQTT");
    Ethernet.begin(mac, ip, gateway, gateway, netmask);
    client.connect(clientId, username, password);
-   client.subscribe(subtopic);
+   client.subscribe(LWsubtopic);
    Serial.println("Initialsing 433 Module");
-   lwrx_setup(rxPin);
-   lwtx_setup(txPin, txMultiplier, invert, uSecTick);
+   lwrx_setup(LWrxPin);
+   lwtx_setup(LWtxPin, txMultiplier, invert, uSecTick);
    Serial.println("Set up completed");
 }
 
@@ -129,7 +134,7 @@ void loop() {
         test += String(msg[i],HEX);
       }
       test.toCharArray(message_buff, test.length()+1);
-      client.publish(snooptopic,message_buff);
+      client.publish(LWsnooptopic,message_buff);
       printMsg(msg, msglen);
    }
    client.loop();
