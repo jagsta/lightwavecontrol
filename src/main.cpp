@@ -26,8 +26,6 @@ byte dimlevel[2];
 byte subunit;
 char message_buff[11];
 
-byte mac2[] = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
-
 /* 
   function to convert ascii to true hex values
 */
@@ -67,10 +65,9 @@ void setup() {
    // set up with rx into pin 2, tx into pin 3
    Serial.begin(9600);
    Serial.println("Initialising Ethernet Stack and connecting to MQTT");
-   Ethernet.begin(mac2, ip, gateway, gateway, netmask);
-//   client.connect(clientId, username, password);
-   client.connect("nook-arduinoclient", "lightwaveproxy", "lightwaveproxy");
-   client.subscribe("lightwaverf/command");
+   Ethernet.begin(mac, ip, gateway, gateway, netmask);
+   client.connect(clientId, username, password);
+   client.subscribe(subtopic);
    Serial.println("Initialsing 433 Module");
    lwrx_setup(rxPin);
    lwtx_setup(txPin, txMultiplier, invert, uSecTick);
