@@ -16,7 +16,7 @@
 #define RCSuSec 326
 #define RCSProtocol 1
 #define RCSRepeat 10
-#define noSerial 0
+#define noSerial 1
 
 // pointer to the debug message
 const char* debugmessage;
@@ -63,6 +63,14 @@ void sendDebug(char const * message) {
 };
 
 void processMQTT(char* topic, byte* payload, unsigned int length) {
+  byte temp[5];
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.println("] ");
+
+  for (int i=0;i<length;i++) {
+    temp[i] = h2d(payload[i]);
+  }
   if (strcmp(topic, LWsubtopic) == 0)
   {
     sendDebug("Lightwave command received");
@@ -71,15 +79,7 @@ void processMQTT(char* topic, byte* payload, unsigned int length) {
   {
     sendDebug("RC Switch command received");
   };
-  byte temp[5];
 
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.println("] ");
-
-  for (int i=0;i<length;i++) {
-    temp[i] = h2d(payload[i]);
-  }
 //  if (length == 11) {
     byte sendMsg[] = {temp[3], temp[4], temp[1], temp[2], id[0], id[1], id[2], id[3], id[4], temp[0]};
 //    Serial.println("message prepped");
