@@ -42,6 +42,14 @@ byte h2d(byte hex)
 }
 
 void processMQTT(char* topic, byte* payload, unsigned int length) {
+  if (strcmp(topic, LWsubtopic) == 0)
+  {
+    Serial.println("Lightwave command received");
+  }
+  else if (strcmp(topic, RCSsubtopic) == 0)
+  {
+    Serial.println("RC Switch command received");
+  };
   byte temp[5];
 /*
   Serial.print("Message arrived [");
