@@ -15,6 +15,7 @@
 #define uSecTick 140
 #define RCSuSec 326
 #define RCSProtocol 1
+#define RCSRepeat 10
 
 //433 data
 byte msg[10];
@@ -65,6 +66,7 @@ void processMQTT(char* topic, byte* payload, unsigned int length) {
 
 EthernetClient ethClient;
 PubSubClient client(server, 1883, processMQTT, ethClient);
+RCSwitch mySwitch = RCSwitch();
 
 void setup() {
    // set up with rx into pin 2, tx into pin 3
@@ -73,9 +75,16 @@ void setup() {
    Ethernet.begin(mac, ip, gateway, gateway, netmask);
    client.connect(clientId, username, password);
    client.subscribe(LWsubtopic);
-   Serial.println("Initialsing 433 Module");
+   client.subscribe(RCSsubtopic);
+   Serial.println("Initialsing Lightwave 433 RX Module");
    lwrx_setup(LWrxPin);
+   Serial.println("Initialsing Lightwave 433 TX Module");
    lwtx_setup(LWtxPin, txMultiplier, invert, uSecTick);
+   Serial.println("Initialsing Generic 433 TX Module");
+   mySwitch.enableTransmit(RCStxPin);
+   mySwitch.setProtocol(RCSProtocol);
+   mySwitch.setPulseLength(RCSuSec);
+   mySwitch.setRepeatTransmit(RCSRepeat);
    Serial.println("Set up completed");
 }
 
