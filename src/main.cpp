@@ -16,6 +16,10 @@
 #define RCSuSec 326
 #define RCSProtocol 1
 #define RCSRepeat 10
+#define noSerial 0
+
+// pointer to the debug message
+const char* debugmessage;
 
 //433 data
 byte msg[10];
@@ -32,6 +36,12 @@ byte dimlevel[2];
 byte subunit;
 char message_buff[11];
 
+// declare the callback then setup the MQTT client, we'll be referencing soon
+void processMQTT(char* topic, byte* payload, unsigned int length); 
+EthernetClient ethClient;
+PubSubClient client(server, 1883, processMQTT, ethClient);
+RCSwitch mySwitch = RCSwitch();
+
 /* 
   function to convert ascii to true hex values
 */
@@ -41,21 +51,32 @@ byte h2d(byte hex)
         return(hex & 0xf);
 }
 
+void sendDebug(char const * message) {
+  if (noSerial)
+  {
+    client.publish(debugtopic, message);
+  }
+  else
+  {
+    Serial.println(message);
+  };
+};
+
 void processMQTT(char* topic, byte* payload, unsigned int length) {
   if (strcmp(topic, LWsubtopic) == 0)
   {
-    Serial.println("Lightwave command received");
+    sendDebug("Lightwave command received");
   }
   else if (strcmp(topic, RCSsubtopic) == 0)
   {
-    Serial.println("RC Switch command received");
+    sendDebug("RC Switch command received");
   };
   byte temp[5];
-/*
+
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.println("] ");
-*/
+
   for (int i=0;i<length;i++) {
     temp[i] = h2d(payload[i]);
   }
@@ -71,10 +92,6 @@ void processMQTT(char* topic, byte* payload, unsigned int length) {
 
   // else message invalid, send error response to client
 }
-
-EthernetClient ethClient;
-PubSubClient client(server, 1883, processMQTT, ethClient);
-RCSwitch mySwitch = RCSwitch();
 
 void setup() {
    // set up with rx into pin 2, tx into pin 3
