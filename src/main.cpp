@@ -16,7 +16,7 @@
 #define RCSuSec 326
 #define RCSProtocol 1
 #define RCSRepeat 10
-#define noSerial 1
+#define useSerial 1
 
 // pointer to the debug message
 const char* debugmessage;
@@ -52,25 +52,26 @@ byte h2d(byte hex)
 }
 
 void sendDebug(char const * message) {
-  if (noSerial)
+  if (useSerial)
   {
-    client.publish(debugtopic, message);
+    Serial.println(message);
   }
   else
   {
-    Serial.println(message);
+    client.publish(debugtopic, message);
   };
 };
 
 void processMQTT(char* topic, byte* payload, unsigned int length) {
   byte temp[5];
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.println("] ");
-
   for (int i=0;i<length;i++) {
     temp[i] = h2d(payload[i]);
   }
+if (useSerial) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.println("] ");
+}
   if (strcmp(topic, LWsubtopic) == 0)
   {
     sendDebug("Lightwave command received");
@@ -95,22 +96,24 @@ void processMQTT(char* topic, byte* payload, unsigned int length) {
 
 void setup() {
    // set up with rx into pin 2, tx into pin 3
-   Serial.begin(9600);
-   Serial.println("Initialising Ethernet Stack and connecting to MQTT");
+   if (useSerial) {
+     Serial.begin(9600);
+     Serial.println("Initialising Ethernet Stack and connecting to MQTT");
+   };
    Ethernet.begin(mac, ip, gateway, gateway, netmask);
    client.connect(clientId, username, password);
    client.subscribe(LWsubtopic);
    client.subscribe(RCSsubtopic);
-   Serial.println("Initialsing Lightwave 433 RX Module");
+   sendDebug("Initialsing Lightwave 433 RX Module");
    lwrx_setup(LWrxPin);
-   Serial.println("Initialsing Lightwave 433 TX Module");
+   sendDebug("Initialsing Lightwave 433 TX Module");
    lwtx_setup(LWtxPin, txMultiplier, invert, uSecTick);
-   Serial.println("Initialsing Generic 433 TX Module");
+   sendDebug("Initialsing Generic 433 TX Module");
    mySwitch.enableTransmit(RCStxPin);
    mySwitch.setProtocol(RCSProtocol);
    mySwitch.setPulseLength(RCSuSec);
    mySwitch.setRepeatTransmit(RCSRepeat);
-   Serial.println("Set up completed");
+   sendDebug("Set up completed");
 }
 
 /**
@@ -148,13 +151,13 @@ void printMsg(byte *msg, byte len) {
    Serial.print(dim_as_int);
    Serial.print("command is ");
    if (command == 0) {
-     Serial.println("off");
+     sendDebug("off");
    }
    else if (command == 1) {
-     Serial.println("on");
+     sendDebug("on");
    };
    Serial.print("subunit is ");
-   Serial.println(subunit);
+   sendDebug(subunit);
 
 }
 
@@ -169,7 +172,7 @@ void loop() {
       }
       test.toCharArray(message_buff, test.length()+1);
       client.publish(LWsnooptopic,message_buff);
-      printMsg(msg, msglen);
+//      printMsg(msg, msglen);
    }
    client.loop();
 }
