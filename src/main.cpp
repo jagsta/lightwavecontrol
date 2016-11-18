@@ -18,8 +18,8 @@
 #define RCSRepeat 10
 #define useSerial 1
 
-// pointer to the debug message
-const char* debugmessage;
+// char array to build debug messages
+char debugmessage[100];
 
 //433 data
 byte msg[10];
@@ -51,6 +51,15 @@ byte h2d(byte hex)
         return(hex & 0xf);
 }
 
+/*
+  function to take a string and return in a format client.publish will accept
+*/
+
+
+
+/*
+  function to either log to serial or MQTT debug channel if headless
+*/
 void sendDebug(char const * message) {
   if (useSerial)
   {
@@ -63,35 +72,38 @@ void sendDebug(char const * message) {
 };
 
 void processMQTT(char* topic, byte* payload, unsigned int length) {
-  byte temp[5];
-  for (int i=0;i<length;i++) {
-    temp[i] = h2d(payload[i]);
+  // first copy the payload to a temp byte array as any MQTT operations will overwrite the payload
+  // lw payloads are 5 bytes, RCswitch payloads are 3 bytes padded
+  // format is room, device, command, dim, dim (2 bytes)
+  // plus 6 bytes of requestid
+  byte req[5];
+  for (int i=0;i<5;i++) {
+    req[i] = h2d(payload[i]);
   }
-if (useSerial) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.println("] ");
-}
-  if (strcmp(topic, LWsubtopic) == 0)
-  {
-    sendDebug("Lightwave command received");
+  byte reqId[6];
+  for (unsigned int i=5;i<length;i++) {
+    reqId[i] = h2d(payload[i]);
   }
-  else if (strcmp(topic, RCSsubtopic) == 0)
+  if (strcmp(topic, RCSsubtopic) == 0)
   {
-    sendDebug("RC Switch command received");
-  };
-
+    sendDebug("RC Switch command received:");
+    sendDebug((char *)req);
+  }
+  else if (strcmp(topic, LWsubtopic) == 0)
+  {
+    sendDebug("Lightwave command received:");
+    sendDebug((char *)req);
 //  if (length == 11) {
-    byte sendMsg[] = {temp[3], temp[4], temp[1], temp[2], id[0], id[1], id[2], id[3], id[4], temp[0]};
-//    Serial.println("message prepped");
+    byte sendMsg[] = {req[3], req[4], req[1], req[2], id[0], id[1], id[2], id[3], id[4], req[0]};
     if (lwtx_free()) {
-//      Serial.println("sending message");
       lwtx_send(sendMsg);
     }
 //  }
   // Send an acknowledge response to client
+  client.publish(LWpubtopic, "holding comment - fix me ");
 
   // else message invalid, send error response to client
+  };
 }
 
 void setup() {
@@ -121,7 +133,6 @@ void setup() {
 **/
 int NibbleCombine( byte msb, byte lsb ) {
    int sum;
-//   sum = msb;
    sum = msb<<4;
    sum |= lsb;
    return sum;
@@ -151,13 +162,13 @@ void printMsg(byte *msg, byte len) {
    Serial.print(dim_as_int);
    Serial.print("command is ");
    if (command == 0) {
-     sendDebug("off");
+     Serial.println("off");
    }
    else if (command == 1) {
-     sendDebug("on");
+     Serial.println("on");
    };
    Serial.print("subunit is ");
-   sendDebug(subunit);
+   Serial.println(subunit);
 
 }
 
