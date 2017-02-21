@@ -1,13 +1,14 @@
 #include "config.h"
-#include <LwRx.h>
-#include <LwTx.h>
+#include <LightwaveRF.h>
 #include <RCSwitch.h>
 #include <Ethernet.h>
 #include <SPI.h>
 #include <PubSubClient.h>
+#include <ESP8266WiFi.h>
 
 #define LWrxPin 2
 #define LWtxPin 3
+#define LWInterrupt 0
 #define RCSrxPin 4
 #define RCStxPin 5
 #define txMultiplier 3
@@ -17,6 +18,7 @@
 #define RCSProtocol 1
 #define RCSRepeat 10
 #define useSerial 1
+
 
 // char array to build debug messages
 char debugmessage[100];
@@ -95,9 +97,7 @@ void processMQTT(char* topic, byte* payload, unsigned int length) {
     sendDebug((char *)req);
 //  if (length == 11) {
     byte sendMsg[] = {req[3], req[4], req[1], req[2], id[0], id[1], id[2], id[3], id[4], req[0]};
-    if (lwtx_free()) {
-      lwtx_send(sendMsg);
-    }
+    lw_send(sendMsg);
 //  }
   // Send an acknowledge response to client
   client.publish(LWpubtopic, "holding comment - fix me ");
@@ -112,14 +112,25 @@ void setup() {
      Serial.begin(9600);
      Serial.println("Initialising Ethernet Stack and connecting to MQTT");
    };
-   Ethernet.begin(mac, ip, gateway, gateway, netmask);
+   Serial.print("Connecting to ");
+   Serial.println(wifissid);
+
+//   WiFi.config(ip, gateway, subnet);
+   WiFi.begin(wifissid, wifipass);
+
+   while (WiFi.status() != WL_CONNECTED) {
+   delay(500);
+   Serial.print(".");
+   }
+   Serial.println("");
+   Serial.println("WiFi connected");
    client.connect(clientId, username, password);
    client.subscribe(LWsubtopic);
    client.subscribe(RCSsubtopic);
    sendDebug("Initialsing Lightwave 433 RX Module");
-   lwrx_setup(LWrxPin);
+   lw_rx_setup(LWrxPin, LWInterrupt);
    sendDebug("Initialsing Lightwave 433 TX Module");
-   lwtx_setup(LWtxPin, txMultiplier, invert, uSecTick);
+   lw_tx_setup(LWtxPin);
    sendDebug("Initialsing Generic 433 TX Module");
    mySwitch.enableTransmit(RCStxPin);
    mySwitch.setProtocol(RCSProtocol);
@@ -175,9 +186,9 @@ void printMsg(byte *msg, byte len) {
 String test;
 void loop() {
    //collect any incoming command message and execute when complete
-   if (lwrx_message()) {
+   if (lw_have_message()) {
      test = "";
-      lwrx_getmessage(msg, msglen);
+      lw_get_message(msg, &msglen);
       for (int i=0;i<msglen;i++){
         test += String(msg[i],HEX);
       }
